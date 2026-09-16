@@ -1,8 +1,11 @@
 classdef Gread < handle
     properties
         G
-        V        
+        V                
         n_prfl =  100
+        p0
+        p1
+        iV
     end
     methods
         function obj = Gread(G,V)            
@@ -26,6 +29,7 @@ classdef Gread < handle
         end
         function set_line(obj,p0,p1)                        
         % validate  p0 and p1
+        'set line in Gread'
         if ~(isnumeric(p0) && isnumeric(p1))
             error('p0 and p1 must be numeric.');
         end
@@ -40,9 +44,20 @@ classdef Gread < handle
             obj.p0 = p0
             obj.p1 = p1
         end
-        function get_prfl(obj)
-            prfl = get_ldos_prfl(obj.G,obj.p0,obj.p1,obj.n_prfl)
-            obj.prfl
+        function set_V(obj,Vfcs)
+        [minval,iV] = min(abs(obj.V - Vfcs))
+        obj.iV = iV;  % Update the index property with the found index
+        % compute 1st and 99th percentiles of the current gmap at the selected voltage
+        vals = obj.G(:,:,iV);
+        p1 = prctile(vals(:),1);
+        p99 = prctile(vals(:),99);
+        obj.clim_gmap = [p1 p99];
+        end
+        function foo = prfl(obj)
+            foo = get_ldos_prfl(obj.G,obj.p0,obj.p1,obj.n_prfl);
+        end
+        function foo = gmap(obj)
+            foo = obj.G(:,:,obj.iV);
         end
     end
 end
